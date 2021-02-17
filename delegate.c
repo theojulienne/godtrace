@@ -3,11 +3,11 @@
 #include "stdlib.h"
 
 int chew(dtrace_probedata_t *data, void *arg) {
-  return goChew(data, arg);
+  return goChew(data, (GoUintptr)arg);
 }
 
 int chewrec(dtrace_probedata_t *data, dtrace_recdesc_t *rec, void *arg) {
-  return goChewRec(data, rec, arg);
+  return goChewRec(data, rec, (GoUintptr)arg);
 }
 
 int dumpChewrec(dtrace_probedata_t *data, dtrace_recdesc_t *rec, void *arg) {
@@ -15,7 +15,7 @@ int dumpChewrec(dtrace_probedata_t *data, dtrace_recdesc_t *rec, void *arg) {
 }
 
 int bufhandler(dtrace_bufdata_t *bufdata, void *arg) {
-  return goBufHandler(bufdata, arg);
+  return goBufHandler(bufdata, (GoUintptr)arg);
 }
 
 void freeArray(int n, char** chs) {

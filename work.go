@@ -10,13 +10,15 @@ import "C"
 import "unsafe"
 
 //export goChewRec
-func goChewRec(data *C.dtrace_probedata_t, rec *C.dtrace_recdesc_t, arg unsafe.Pointer) C.int {
-	return C.int((*Handle)(arg).rec((*ProbeData)(data), (*RecDesc)(rec)))
+func goChewRec(data *C.dtrace_probedata_t, rec *C.dtrace_recdesc_t, arg uintptr) C.int {
+	h, _ := getHandleByID(arg).(*Handle)
+	return C.int(h.rec((*ProbeData)(data), (*RecDesc)(rec)))
 }
 
 //export goChew
-func goChew(data *C.dtrace_probedata_t, arg unsafe.Pointer) C.int {
-	return C.int((*Handle)(arg).probe((*ProbeData)(data)))
+func goChew(data *C.dtrace_probedata_t, arg uintptr) C.int {
+	h, _ := getHandleByID(arg).(*Handle)
+	return C.int(h.probe((*ProbeData)(data)))
 }
 
 func (h *Handle) SetHandlerFunc(f func(*ProbeData) int) {
@@ -47,7 +49,7 @@ func (h *Handle) Work() WorkStatus {
 	} else {
 		r = (*C.dtrace_consume_rec_f)(C.dumpChewrec)
 	}
-	return WorkStatus(C.dtrace_work(h.handle, nil, p, r, unsafe.Pointer(h)))
+	return WorkStatus(C.dtrace_work(h.handle, nil, p, r, unsafe.Pointer(h.id)))
 }
 
 type WorkStatus int

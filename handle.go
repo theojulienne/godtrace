@@ -2,6 +2,7 @@ package godtrace
 
 import (
 	"errors"
+	"sync"
 	"unsafe"
 )
 
@@ -14,6 +15,12 @@ extern void freeString(char* chs);
 */
 import "C"
 
+var (
+	handles      = make(map[uintptr]interface{})
+	handleID     uintptr
+	handleIDLock sync.RWMutex
+)
+
 type Handle struct {
 	handle *C.struct_dtrace_hdl
 
@@ -21,6 +28,8 @@ type Handle struct {
 
 	probe func(*ProbeData) int
 	rec   func(*ProbeData, *RecDesc) int
+
+	id uintptr
 }
 
 func Open(flags int) (*Handle, error) {
@@ -34,14 +43,34 @@ func Open(flags int) (*Handle, error) {
 }
 
 func newHandle(handle *C.struct_dtrace_hdl) *Handle {
+	handleIDLock.Lock()
+	defer handleIDLock.Unlock()
+
+	handleID++
+
 	hdl := &Handle{
+		id:     handleID,
 		handle: handle,
 	}
+
+	handles[hdl.id] = hdl
+
 	return hdl
+}
+
+func getHandleByID(id uintptr) interface{} {
+	handleIDLock.RLock()
+	defer handleIDLock.RUnlock()
+	return handles[id]
 }
 
 func (h *Handle) Close() {
 	C.dtrace_close(h.handle)
+
+	handleIDLock.Lock()
+	defer handleIDLock.Unlock()
+
+	delete(handles, h.id)
 }
 
 type Prog struct {

@@ -71,8 +71,9 @@ func (c *consumer) Consume(buf *BufData) int {
 // -----------------------------------------------------------------------------
 
 //export goBufHandler
-func goBufHandler(bufdata *C.dtrace_bufdata_t, arg unsafe.Pointer) C.int {
-	return C.int((*Handle)(arg).consumer.Consume((*BufData)(bufdata)))
+func goBufHandler(bufdata *C.dtrace_bufdata_t, arg uintptr) C.int {
+	h, _ := getHandleByID(arg).(*Handle)
+	return C.int(h.consumer.Consume((*BufData)(bufdata)))
 }
 
 func (h *Handle) ConsumeChan() (<-chan *BufData, error) {
@@ -107,7 +108,7 @@ func (h *Handle) ConsumePipe() (*io.PipeReader, error) {
 
 func (h *Handle) initHandleBuffered() error {
 	handler := (*C.dtrace_handle_buffered_f)(C.bufhandler)
-	ret := C.dtrace_handle_buffered(h.handle, handler, unsafe.Pointer(h))
+	ret := C.dtrace_handle_buffered(h.handle, handler, unsafe.Pointer(h.id))
 	if ret == -1 {
 		return h.GetError()
 	}
