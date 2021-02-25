@@ -73,6 +73,12 @@ func (h *Handle) Close() {
 	delete(handles, h.id)
 }
 
+func (h *Handle) SetOption(name string, value string) {
+	cname := C.CString(name)
+	cvalue := C.CString(value)
+	C.dtrace_setopt(h.handle, cname, cvalue)
+}
+
 type Prog struct {
 	prog *C.dtrace_prog_t
 }

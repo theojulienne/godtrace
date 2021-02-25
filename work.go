@@ -7,7 +7,9 @@ extern int chewrec(dtrace_probedata_t *, dtrace_recdesc_t *, void *);
 extern int dumpChewrec(dtrace_probedata_t *, dtrace_recdesc_t *, void *);
 */
 import "C"
-import "unsafe"
+import (
+	"unsafe"
+)
 
 //export goChewRec
 func goChewRec(data *C.dtrace_probedata_t, rec *C.dtrace_recdesc_t, arg uintptr) C.int {
@@ -97,6 +99,17 @@ const (
 
 type RecDesc C.dtrace_recdesc_t
 
+type ActionKind int
+
+const (
+	ActionNone          = C.DTRACEACT_NONE
+	ActionDIFExpression = C.DTRACEACT_DIFEXPR
+)
+
+func (rd *RecDesc) Action() ActionKind {
+	return ActionKind(rd.dtrd_action)
+}
+
 // -----------------------------------------------------------------------------
 // typedef struct dtrace_probedata {
 //     dtrace_hdl_t *dtpda_handle;          /* handle to DTrace library */
@@ -152,6 +165,14 @@ func (p *ProbeData) Prefix() string {
 	return C.GoString(p.dtpda_prefix)
 }
 
+func (p *ProbeData) BytesForRecord(desc *RecDesc) []byte {
+	return C.GoBytes(unsafe.Pointer(p.dtpda_data), C.int(desc.dtrd_size))
+}
+
+func (p *ProbeData) StringForRecord(desc *RecDesc) string {
+	return string(p.BytesForRecord(desc))
+}
+
 // -----------------------------------------------------------------------------
 // typedef struct dtrace_probedesc {
 //     dtrace_id_t dtpd_id;                    /* probe identifier */
@@ -196,4 +217,8 @@ type BufData C.dtrace_bufdata_t
 
 func (b *BufData) Buffered() string {
 	return C.GoString(b.dtbda_buffered)
+}
+
+func (b *BufData) Probe() *ProbeData {
+	return (*ProbeData)(b.dtbda_probe)
 }
