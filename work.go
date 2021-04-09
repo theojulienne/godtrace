@@ -104,6 +104,8 @@ type ActionKind int
 const (
 	ActionNone          = C.DTRACEACT_NONE
 	ActionDIFExpression = C.DTRACEACT_DIFEXPR
+	ActionUserStack     = C.DTRACEACT_USTACK
+	ActionKernelStack   = C.DTRACEACT_STACK
 )
 
 func (rd *RecDesc) Action() ActionKind {
